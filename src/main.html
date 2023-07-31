@@ -21,40 +21,32 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
   <link href="/styles.css" rel="stylesheet">
-  <script type="text/javascript" src="js/paper.js"></script>
-  <!-- Define inlined PaperScript associate it with myCanvas -->
-  <script type="text/javascript">
-    // Only executed our code once the DOM is ready.
-    window.onload = function () {
-      console.log("loaded");
-      // Get a reference to the canvas object
-      var canvas = document.getElementById('myCanvas');
-      // Create an empty project and a view for the canvas:
-      paper.setup(canvas);
-      // Create a Paper.js Path to draw a line into it:
-      var path = new paper.Path();
-      // Give the stroke a color
-      path.strokeColor = 'black';
-      var start = new paper.Point(100, 100);
-      // Move to start and draw a line from there
-      path.moveTo(start);
-      // Note that the plus operator on Point objects does not work
-      // in JavaScript. Instead, we need to call the add() function:
-      path.lineTo(start.add([200, -50]));
-      // Draw the view now:
-      paper.view.draw();
-    }
-  </script>
 </head>
 
-<body class="w-screen h-screen flex justify-center">
-  <div class="flex flex-col max-w-sm h-full justify-end items-center">
+<body class="w-screen h-screen flex justify-center p-2">
+  <div class="flex flex-col max-w-sm h-full justify-end items-center gap-4">
     <h1 class="text-2xl">Kanji Study</h1>
-    <div class="flex">
+    <div class="flex gap-4">
       <div class="text-9xl">重</div>
       <div>Details about Kanji here, readings, etc</div>
     </div>
-    <canvas id="myCanvas" resize></canvas>
+    <canvas class="border" id="canvas" width="300" height="300"></canvas>
+    <div>
+      <button onclick="javascript:clearArea();return false;">Clear Area</button>
+      Line width : <select id="selWidth">
+        <option value="11">11</option>
+        <option value="13" selected="selected">13</option>
+        <option value="15">15</option>
+      </select>
+      Color : <select id="selColor">
+        <option value="black">black</option>
+        <option value="blue" selected="selected">blue</option>
+        <option value="red">red</option>
+        <option value="green">green</option>
+        <option value="yellow">yellow</option>
+        <option value="gray">gray</option>
+      </select>
+    </div>
   </div>
   <script type="module">
     import {h, Component, render} from 'https://esm.sh/preact';
@@ -70,6 +62,148 @@
     // render(html`<${App} name="World" />`, document.body);
   </script>
 </body>
+<script>
+  const canvas = document.getElementById('canvas');
+  const context = canvas.getContext('2d');
+  let isDrawing = false;
+  let x = 0;
+  let y = 0;
+  var offsetX;
+  var offsetY;
 
+  // Draw a dotted gray opacity cross on the canvas
+  // to show where the center is
+  function drawCross() {
+    context.beginPath();
+    context.lineWidth = "1";
+    context.strokeStyle = "rgba(0,0,0,0.2)";
+    context.moveTo(0, 150);
+    context.lineTo(300, 150);
+    context.stroke();
+    context.beginPath();
+    context.moveTo(150, 0);
+    context.lineTo(150, 300);
+    context.stroke();
+  }
+
+  drawCross()
+
+  function startup() {
+    canvas.addEventListener('touchstart', handleStart);
+    canvas.addEventListener('touchend', handleEnd);
+    canvas.addEventListener('touchcancel', handleCancel);
+    canvas.addEventListener('touchmove', handleMove);
+    canvas.addEventListener('mousedown', (e) => {
+      x = e.offsetX;
+      y = e.offsetY;
+      isDrawing = true;
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (isDrawing) {
+        drawLine(context, x, y, e.offsetX, e.offsetY);
+        x = e.offsetX;
+        y = e.offsetY;
+      }
+    });
+
+    canvas.addEventListener('mouseup', (e) => {
+      if (isDrawing) {
+        drawLine(context, x, y, e.offsetX, e.offsetY);
+        x = 0;
+        y = 0;
+        isDrawing = false;
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", startup);
+
+  const ongoingTouches = [];
+
+  function handleStart(evt) {
+    evt.preventDefault();
+    const touches = evt.changedTouches;
+    offsetX = canvas.getBoundingClientRect().left;
+    offsetY = canvas.getBoundingClientRect().top;
+    for (let i = 0; i < touches.length; i++) {
+      ongoingTouches.push(copyTouch(touches[i]));
+    }
+  }
+
+  function handleMove(evt) {
+    evt.preventDefault();
+    const touches = evt.changedTouches;
+    for (let i = 0; i < touches.length; i++) {
+      const color = document.getElementById('selColor').value;
+      const idx = ongoingTouchIndexById(touches[i].identifier);
+      if (idx >= 0) {
+        context.beginPath();
+        context.moveTo(ongoingTouches[idx].clientX - offsetX, ongoingTouches[idx].clientY - offsetY);
+        context.lineTo(touches[i].clientX - offsetX, touches[i].clientY - offsetY);
+        context.lineWidth = document.getElementById('selWidth').value;
+        context.strokeStyle = color;
+        context.lineJoin = "round";
+        context.closePath();
+        context.stroke();
+        ongoingTouches.splice(idx, 1, copyTouch(touches[i]));  // swap in the new touch record
+      }
+    }
+  }
+
+  function handleEnd(evt) {
+    evt.preventDefault();
+    const touches = evt.changedTouches;
+    for (let i = 0; i < touches.length; i++) {
+      const color = document.getElementById('selColor').value;
+      let idx = ongoingTouchIndexById(touches[i].identifier);
+      if (idx >= 0) {
+        context.lineWidth = document.getElementById('selWidth').value;
+        context.fillStyle = color;
+        ongoingTouches.splice(idx, 1);  // remove it; we're done
+      }
+    }
+  }
+
+  function handleCancel(evt) {
+    evt.preventDefault();
+    const touches = evt.changedTouches;
+    for (let i = 0; i < touches.length; i++) {
+      let idx = ongoingTouchIndexById(touches[i].identifier);
+      ongoingTouches.splice(idx, 1);  // remove it; we're done
+    }
+  }
+
+  function copyTouch({identifier, clientX, clientY}) {
+    return {identifier, clientX, clientY};
+  }
+
+  function ongoingTouchIndexById(idToFind) {
+    for (let i = 0; i < ongoingTouches.length; i++) {
+      const id = ongoingTouches[i].identifier;
+      if (id === idToFind) {
+        return i;
+      }
+    }
+    return -1;    // not found
+  }
+
+  function drawLine(context, x1, y1, x2, y2) {
+    context.beginPath();
+    context.strokeStyle = document.getElementById('selColor').value;
+    context.lineWidth = document.getElementById('selWidth').value;
+    context.lineJoin = "round";
+    context.moveTo(x1, y1);
+    context.lineTo(x2, y2);
+    context.closePath();
+    context.stroke();
+  }
+
+  function clearArea() {
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+    drawCross()
+  }
+</script>
 
 </html>

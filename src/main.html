@@ -1,0 +1,75 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>A Basic HTML5 Template</title>
+  <meta name="description" content="A simple HTML5 Template for new projects.">
+  <meta name="author" content="SitePoint">
+
+  <meta property="og:title" content="A Basic HTML5 Template">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.sitepoint.com/a-basic-html5-template/">
+  <meta property="og:description" content="A simple HTML5 Template for new projects.">
+  <meta property="og:image" content="image.png">
+
+  <link rel="icon" href="/favicon.ico">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <link href="/styles.css" rel="stylesheet">
+  <script type="text/javascript" src="js/paper.js"></script>
+  <!-- Define inlined PaperScript associate it with myCanvas -->
+  <script type="text/javascript">
+    // Only executed our code once the DOM is ready.
+    window.onload = function () {
+      console.log("loaded");
+      // Get a reference to the canvas object
+      var canvas = document.getElementById('myCanvas');
+      // Create an empty project and a view for the canvas:
+      paper.setup(canvas);
+      // Create a Paper.js Path to draw a line into it:
+      var path = new paper.Path();
+      // Give the stroke a color
+      path.strokeColor = 'black';
+      var start = new paper.Point(100, 100);
+      // Move to start and draw a line from there
+      path.moveTo(start);
+      // Note that the plus operator on Point objects does not work
+      // in JavaScript. Instead, we need to call the add() function:
+      path.lineTo(start.add([200, -50]));
+      // Draw the view now:
+      paper.view.draw();
+    }
+  </script>
+</head>
+
+<body class="w-screen h-screen flex justify-center">
+  <div class="flex flex-col max-w-sm h-full justify-end items-center">
+    <h1 class="text-2xl">Kanji Study</h1>
+    <div class="flex">
+      <div class="text-9xl">重</div>
+      <div>Details about Kanji here, readings, etc</div>
+    </div>
+    <canvas id="myCanvas" resize></canvas>
+  </div>
+  <script type="module">
+    import {h, Component, render} from 'https://esm.sh/preact';
+    import htm from 'https://esm.sh/htm';
+
+    // Initialize htm with Preact
+    const html = htm.bind(h);
+
+    function App(props) {
+      return html`<h1 class="text-3xl text-blue-400">Hello ${props.name}!</h1>`;
+    }
+
+    // render(html`<${App} name="World" />`, document.body);
+  </script>
+</body>
+
+
+</html>

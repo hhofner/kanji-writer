@@ -7,6 +7,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>A Basic HTML5 Template</title>
+
+  <script src="https://unpkg.com/htmx.org@1.9.3"></script>
+  <script src="https://unpkg.com/hyperscript.org@0.9.9"></script>
   <meta name="description" content="A simple HTML5 Template for new projects.">
   <meta name="author" content="SitePoint">
 
@@ -25,15 +28,70 @@
 
 <body class="w-screen h-screen flex justify-center p-2">
   <div class="flex flex-col max-w-sm h-full justify-end items-center gap-4">
-    <h1 class="text-2xl">Kanji Study</h1>
-    <div class="flex gap-4">
-      <div class="text-9xl">重</div>
-      <div>Details about Kanji here, readings, etc</div>
+    <header class="flex justify-between w-full items-center">
+      <h1 class="text-2xl text-stone-500">Kanji Study</h1>
+      <a href="/sets" class="text-stone-400 gap-2 flex">
+        <span>Sets</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5">
+            <path d="M7 2h9.5L21 6.5V19" />
+            <path
+              d="M3 20.5v-14A1.5 1.5 0 0 1 4.5 5h9.752a.6.6 0 0 1 .424.176l3.148 3.148A.6.6 0 0 1 18 8.75V20.5a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 3 20.5Z" />
+            <path d="M14 5v3.4a.6.6 0 0 0 .6.6H18" />
+          </g>
+        </svg>
+      </a>
+    </header>
+    <div class="flex justify-between items-center w-full">
+      <button class="text-slate-400" hx-target="#kanjiToStudy" hx-get="/previous/kanji" hx-swap="outerHTML">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
+          <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="m15 6l-6 6l6 6" />
+        </svg>
+      </button>
+      <div class="flex h-[128px]" id="kanjiToStudy">
+        <div class="text-9xl">{{ kanji }}</div>
+        <div class="flex flex-col items-center justify-center">
+          <h2>{{ meaning }}</h2>
+          <h3>{{ onyomi }}</h3>
+          <h3>{{ kunyomi }}</h3>
+        </div>
+      </div>
+      <button class="text-slate-400" hx-target="#kanjiToStudy" hx-get="/next/kanji" hx-swap="outerHTML">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
+          <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="m9 6l6 6l-6 6" />
+        </svg>
+      </button>
     </div>
     <canvas class="border" id="canvas" width="300" height="300"></canvas>
-    <div>
-      <button onclick="javascript:clearArea();return false;">Clear Area</button>
-      Line width : <select id="selWidth">
+    <div class="flex w-full justify-between">
+      <button class="flex gap-2">
+        <span>Next</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M3 12h18m0 0l-8.5-8.5M21 12l-8.5 8.5" />
+        </svg>
+      </button>
+      <button class="flex gap-2">
+        <span>Hide</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M20 10v4a8 8 0 1 1-16 0v-4a8 8 0 1 1 16 0Zm-2.5-5.5L13 8m6-1l-7.5 6" />
+        </svg>
+      </button>
+      <button class="flex gap-2" onclick="javascript:clearArea();return false;">
+        <span>Clear</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5">
+            <path d="M21.168 8A10.003 10.003 0 0 0 12 2c-5.185 0-9.45 3.947-9.95 9" />
+            <path d="M17 8h4.4a.6.6 0 0 0 .6-.6V3M2.881 16c1.544 3.532 5.068 6 9.168 6c5.186 0 9.45-3.947 9.951-9" />
+            <path d="M7.05 16h-4.4a.6.6 0 0 0-.6.6V21" />
+          </g>
+        </svg>
+
+      </button>
+      <!-- Line width : <select id="selWidth">
         <option value="11">11</option>
         <option value="13" selected="selected">13</option>
         <option value="15">15</option>
@@ -45,21 +103,10 @@
         <option value="green">green</option>
         <option value="yellow">yellow</option>
         <option value="gray">gray</option>
-      </select>
+      </select> -->
     </div>
   </div>
   <script type="module">
-    import {h, Component, render} from 'https://esm.sh/preact';
-    import htm from 'https://esm.sh/htm';
-
-    // Initialize htm with Preact
-    const html = htm.bind(h);
-
-    function App(props) {
-      return html`<h1 class="text-3xl text-blue-400">Hello ${props.name}!</h1>`;
-    }
-
-    // render(html`<${App} name="World" />`, document.body);
   </script>
 </body>
 <script>
@@ -135,13 +182,15 @@
     evt.preventDefault();
     const touches = evt.changedTouches;
     for (let i = 0; i < touches.length; i++) {
-      const color = document.getElementById('selColor').value;
+      // const color = document.getElementById('selColor').value;
+      const color = 'black';
       const idx = ongoingTouchIndexById(touches[i].identifier);
       if (idx >= 0) {
         context.beginPath();
         context.moveTo(ongoingTouches[idx].clientX - offsetX, ongoingTouches[idx].clientY - offsetY);
         context.lineTo(touches[i].clientX - offsetX, touches[i].clientY - offsetY);
-        context.lineWidth = document.getElementById('selWidth').value;
+        // context.lineWidth = document.getElementById('selWidth').value;
+        context.lineWidth = 8;
         context.strokeStyle = color;
         context.lineJoin = "round";
         context.closePath();
@@ -155,10 +204,12 @@
     evt.preventDefault();
     const touches = evt.changedTouches;
     for (let i = 0; i < touches.length; i++) {
-      const color = document.getElementById('selColor').value;
+      // const color = document.getElementById('selColor').value;
+      const color = 'black';
       let idx = ongoingTouchIndexById(touches[i].identifier);
       if (idx >= 0) {
-        context.lineWidth = document.getElementById('selWidth').value;
+        // context.lineWidth = document.getElementById('selWidth').value;
+        context.lineWidth = 8;
         context.fillStyle = color;
         ongoingTouches.splice(idx, 1);  // remove it; we're done
       }
@@ -190,8 +241,10 @@
 
   function drawLine(context, x1, y1, x2, y2) {
     context.beginPath();
-    context.strokeStyle = document.getElementById('selColor').value;
-    context.lineWidth = document.getElementById('selWidth').value;
+    // context.strokeStyle = document.getElementById('selColor').value;
+    context.strokeStyle = 'black';
+    // context.lineWidth = document.getElementById('selWidth').value;
+    context.lineWidth = 8;
     context.lineJoin = "round";
     context.moveTo(x1, y1);
     context.lineTo(x2, y2);
@@ -205,5 +258,31 @@
     drawCross()
   }
 </script>
+<style>
+  @supports (-webkit-touch-callout: none) {
+    .h-screen {
+      height: -webkit-fill-available;
+    }
+  }
+
+  .fade-in {
+    opacity: 1;
+    animation-name: fadeInOpacity;
+    animation-iteration-count: 1;
+    animation-timing-function: ease-in;
+    animation-duration: 0.5s;
+  }
+
+
+  @keyframes fadeInOpacity {
+    0% {
+      opacity: 0;
+    }
+
+    100% {
+      opacity: 1;
+    }
+  }
+</style>
 
 </html>
